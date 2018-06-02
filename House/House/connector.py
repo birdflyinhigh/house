@@ -7,18 +7,18 @@ import pymysql
 #
 #
 # # sql = """
-# #     create table agent_info(
-# #         id int unsigned primary key auto_increment not null,
-# #         name varchar(10) ,
-# #         company varchar(100) ,
-# #         mobile varchar(100) ,
-# #         service_area varchar(100) ,
-# #         city varchar(100),
-# #         area varchar(100),
-# #         plate varchar(100) ,
-# #         community varchar(100) ,
-# #         url varchar(100)
-# #     );"""
+#     create table agent_info(
+#         id int unsigned primary key auto_increment not null,
+#         name varchar(10) ,
+#         company varchar(100) ,
+#         mobile varchar(100) ,
+#         service_area varchar(100) ,
+#         city varchar(100),
+#         area varchar(500),
+#         plate varchar(500) ,
+#         community varchar(500) ,
+#         url varchar(500)
+#     );"""
 
 
 def insert_into_mysql(item):
@@ -47,7 +47,7 @@ def insert_into_mysql(item):
     # community = community.__str__().decode('unicode-escape')
     # url = url.__str__().decode('unicode-escape')
 
-    sql = 'insert into agent_info (name, company, mobile, service_area, city, area, plate, community, url) values (%s, %s, %s, %s, %s, %s，%s, %s, %s);'% (name, company, mobile, service_area, city, area, plate, community, url)
+    # sql = 'insert into agent_info (name, company, mobile, service_area, city, area, plate, community, url) values (%s, %s, %s, %s, %s, %s，%s, %s, %s);'% (name, company, mobile, service_area, city, area, plate, community, url)
 
 
 
@@ -63,7 +63,7 @@ def insert_into_mysql(item):
     # small_category = item['small_category']
     # child_category = item['child_category']
     #
-    # words = 'insert into products (name,address,url,contact,description,big_category,small_category,child_category) VALUES ("%s","%s","%s","%s","%s","%s","%s","%s");' % (name,address,url,contact,description,big_category,small_category,child_category)
+    sql = 'insert into agent_info (name,company,mobile,service_area,city,area,plate,community,url) VALUES ("%s","%s","%s","%s","%s","%s","%s","%s","%s");' % (name,company,mobile,service_area,city,area,plate,community,url)
     # print(words)
     cur.execute(sql)
 
