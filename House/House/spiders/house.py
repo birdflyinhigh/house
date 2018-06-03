@@ -8,50 +8,48 @@ from House.connector import insert_into_mysql
 class HouseSpider(scrapy.Spider):
     name = 'house'
     allowed_domains = ['163.com']
-    start_urls = ['http://esf.house.163.com/gz/search/0-0-0-0-1.html', 'http://esf.house.163.com/bj/search/0-0-0-0-1.html', 'http://esf.house.163.com/sh/search/0-0-0-0-1.html']
+    start_urls = []
+    # 北京地区的
+    base_url_bj = 'http://esf.house.163.com/bj/search/{}-0-0-0-1.html'
+    base_url_gz = 'http://esf.house.163.com/gz/search/{}-0-0-0-1.html'
+    base_url_sh = 'http://esf.house.163.com/sh/search/{}-0-0-0-1.html'
+    for i in range(0, 19):
+        bj_url = base_url_bj.format(i)
+        print(bj_url)
+        start_urls.append(bj_url)
+    # 广州地区
+    for i in range(0, 14):
+        gz_url = base_url_gz.format(i)
+        print(gz_url)
+        start_urls.append(gz_url)
+    # 上海地区
+    for i in range(0, 20):
+        sh_url = base_url_sh.format(i)
+        print(sh_url)
+        start_urls.append(sh_url)
     prefix = 'http://esf.house.163.com'
 
     def parse(self, response):
+        """url 是区信息，功能是找该区的所有列表页面url
         """
-        :param response: 获取start urls的response
-        :return: 转交request,使用callback函数,解析每个区域的经纪人列表url
-        """
-
         city = response.xpath('//*[@class="hed_city_name"]/text()').extract_first()
-        area_ids = response.xpath('//*[@class="al_dis_list"]/em/@_value').extract()
-        area_names = response.xpath('//*[@class="al_dis_list"]/em/text()').extract()
-        for i in range(len(area_ids)):
-            if i == 2:
-                break
-            area_name = area_names[i]
-            area_id = area_ids[i]
-            if area_name == u'不限':
-                continue
-            # 匹配替换，构造各个区域的列表页面url
-            regex = r'search\/[0-9]+-'
-            repl = r'search/{}-'.format(area_id)
-            url = re.sub(regex, repl, response.url)
-            # 配置area_info meta data
-            area_info = {
-                'area_name': area_name,
-                'city': city,
-                'url': url
-            }
-            time.sleep(1)
-            yield scrapy.Request(
-                url=url,
-                callback=self.parse_page_data,
-                meta={'area_info': area_info}
-            )
-
-    def parse_page_data(self, response):
-        """进入<区域>经纪人第一页，获取该区域里面的所有页面的url,提交下一个解析"""
-
-        area_info = response.meta['area_info']
-        postfixs = response.xpath('//*[@class="pager_box"]/a/@href').extract()
-        for postfix in postfixs:
-            url = self.prefix + postfix
-            time.sleep(0.4)
+        print(city)
+        area_name = response.xpath('//*[@class="al_item al_item_cr"]/text()').extract_first()
+        base_url = response.url
+        print(area_name)
+        area_info = {
+            'area_name': area_name,
+            'city': city,
+        }
+        try:
+            pages = response.xpath('//*[@class="pager_box"]/a/text()').extract()[-2]
+        except:
+            pages = 1
+        pages = int(pages)
+        print(pages, type(pages))
+        for i in range(pages):
+            end_fix = '-{}.html'.format(str(i+1))
+            url = base_url.replace('-1.html', end_fix)
             yield scrapy.Request(
                 url=url,
                 callback=self.parse_agent_list,
@@ -62,12 +60,11 @@ class HouseSpider(scrapy.Spider):
         """针对每个列表页面的数据，获取对应的详情页url"""
         area_info = response.meta['area_info']
         agents = response.xpath('//*[@class="al_agent_cell clearfix"]')
-
         for agent in agents:
             postfix = agent.xpath('div[1]/a/@href').extract_first()
             url = self.prefix + postfix
             area_info['company'] = agent.xpath('//*[@class="al_agent_company"]/text()').extract_first()
-            time.sleep(0.6)
+            # time.sleep(0.02)
             yield scrapy.Request(
                 url=url,
                 callback=self.parse_agent_detail,
@@ -96,10 +93,8 @@ class HouseSpider(scrapy.Spider):
         print('*'*100)
         print(item)
         print('*'*100)
-        # print '*'*100
         insert_into_mysql(item=item)
 
-        # yield item
 
     def list_to_string(self, items):
         info = ''
